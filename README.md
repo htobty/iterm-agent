@@ -86,7 +86,7 @@ zsh 插件通过以下规则判断输入类型：
 ### 步骤
 
 ```bash
-git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent && bash ~/code/iterm-agent/install.sh
+git clone https://github.com/htobty/iterm-agent.git && bash iterm-agent/install.sh
 ```
 
 安装脚本会交互式询问 LLM 配置（base_url、model、api_key），其余全自动。

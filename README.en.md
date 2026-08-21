@@ -89,7 +89,7 @@ The zsh plugin routes input based on these rules:
 ### Steps
 
 ```bash
-git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent && bash ~/code/iterm-agent/install.sh
+git clone https://github.com/htobty/iterm-agent.git && bash iterm-agent/install.sh
 ```
 
 The installer will prompt for your LLM config (base_url, model, api_key) and handle everything else.
