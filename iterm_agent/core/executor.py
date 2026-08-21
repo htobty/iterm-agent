@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, Awaitable, Callable
 
@@ -95,6 +96,23 @@ class Executor:
 
             # LLM 返回工具调用
             if response.has_tool_calls:
+                # 构建标准 tool calling 格式的 assistant 消息
+                tool_calls_payload = []
+                for tc in response.tool_calls:
+                    tool_calls_payload.append({
+                        "id": tc["id"],
+                        "type": "function",
+                        "function": {
+                            "name": tc["function_name"],
+                            "arguments": json.dumps(tc["arguments"], ensure_ascii=False),
+                        },
+                    })
+                messages.append({
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": tool_calls_payload,
+                })
+
                 for tc in response.tool_calls:
                     func_name = tc["function_name"]
                     params = tc["arguments"]
@@ -141,13 +159,11 @@ class Executor:
 
                     logger.info(f"  Observation: {observation[:200]}")
 
+                    # 标准 tool 消息格式
                     messages.append({
-                        "role": "assistant",
-                        "content": f"[调用工具 {func_name}]",
-                    })
-                    messages.append({
-                        "role": "user",
-                        "content": f"[工具 {func_name} 返回]\n{observation}",
+                        "role": "tool",
+                        "tool_call_id": tc["id"],
+                        "content": observation,
                     })
                 continue
 
