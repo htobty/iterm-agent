@@ -87,41 +87,16 @@ zsh 插件通过以下规则判断输入类型：
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourname/iterm-agent.git ~/code/iterm-agent
-cd ~/code/iterm-agent
+git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent
 
-# 2. 安装依赖
-python3 -m pip install openai pyyaml rich
-
-# 3. 创建配置文件
-mkdir -p ~/.iterm_agent
-cat > ~/.iterm_agent/config.yaml << 'EOF'
-llm:
-  provider: openai
-  model: gpt-4o
-  api_key: sk-your-key-here
-  base_url: null
-  temperature: 0.2
-  max_tokens: 4096
-
-agent:
-  max_react_steps: 3
-  auto_confirm: false
-
-guardrail:
-  enabled: true
-  timeout: 30
-
-memory:
-  long_term_path: ~/.iterm_agent/memory.json
-  max_facts: 50
-EOF
-
-# 4. 在 ~/.zshrc 末尾添加
-echo 'source ~/code/iterm-agent/iterm-agent.zsh' >> ~/.zshrc
-
-# 5. 重开 iTerm2 窗口
+# 2. 运行安装脚本（自动装依赖、生成配置、配置 zshrc）
+bash ~/code/iterm-agent/install.sh
 ```
+
+安装脚本会交互式询问 LLM 配置（base_url、model、api_key），其余全自动。
+安装完成后重开 iTerm2 窗口即可使用。
+
+> 如果已有 `~/.iterm_agent/config.yaml`，脚本会跳过配置步骤，仅确保依赖和 zshrc 就绪（可重复执行）。
 
 ### 配置说明
 

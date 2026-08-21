@@ -90,41 +90,16 @@ The zsh plugin routes input based on these rules:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourname/iterm-agent.git ~/code/iterm-agent
-cd ~/code/iterm-agent
+git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent
 
-# 2. Install dependencies
-python3 -m pip install openai pyyaml rich
-
-# 3. Create config
-mkdir -p ~/.iterm_agent
-cat > ~/.iterm_agent/config.yaml << 'EOF'
-llm:
-  provider: openai
-  model: gpt-4o
-  api_key: sk-your-key-here
-  base_url: null
-  temperature: 0.2
-  max_tokens: 4096
-
-agent:
-  max_react_steps: 3
-  auto_confirm: false
-
-guardrail:
-  enabled: true
-  timeout: 30
-
-memory:
-  long_term_path: ~/.iterm_agent/memory.json
-  max_facts: 50
-EOF
-
-# 4. Add to ~/.zshrc (at the very end)
-echo 'source ~/code/iterm-agent/iterm-agent.zsh' >> ~/.zshrc
-
-# 5. Open a new iTerm2 window
+# 2. Run the installer (handles deps, config, and zshrc automatically)
+bash ~/code/iterm-agent/install.sh
 ```
+
+The installer will prompt for your LLM config (base_url, model, api_key) and handle everything else.
+Open a new iTerm2 window after installation to start using it.
+
+> If `~/.iterm_agent/config.yaml` already exists, the installer skips config and just ensures deps and zshrc are in place (idempotent, safe to re-run).
 
 ### Configuration
 
