@@ -86,11 +86,7 @@ zsh 插件通过以下规则判断输入类型：
 ### 步骤
 
 ```bash
-# 1. 克隆项目
-git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent
-
-# 2. 运行安装脚本（自动装依赖、生成配置、配置 zshrc）
-bash ~/code/iterm-agent/install.sh
+git clone https://github.com/htobty/iterm-agent.git ~/code/iterm-agent && bash ~/code/iterm-agent/install.sh
 ```
 
 安装脚本会交互式询问 LLM 配置（base_url、model、api_key），其余全自动。
@@ -117,30 +113,6 @@ bash ~/code/iterm-agent/install.sh
 | `memory.long_term_path` | 长期记忆存储路径 |
 | `memory.max_facts` | 长期记忆最大条目数 |
 
-### 使用不同 LLM
-
-```yaml
-# Moonshot Kimi
-llm:
-  provider: openai
-  model: kimi-k2
-  api_key: sk-xxx
-  base_url: https://api.moonshot.cn/v1
-
-# DeepSeek
-llm:
-  provider: openai
-  model: deepseek-chat
-  api_key: sk-xxx
-  base_url: https://api.deepseek.com/v1
-
-# 本地 vLLM
-llm:
-  provider: openai
-  model: qwen2.5-72b
-  api_key: not-needed
-  base_url: http://localhost:8000/v1
-```
 
 ## 使用
 
