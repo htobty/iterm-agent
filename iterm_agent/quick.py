@@ -215,10 +215,7 @@ async def _handle_with_session(agent, user_input: str, on_token=None) -> str:
     session.add_exchange(user_input, result)
     store.save(session)
 
-    # 6. 提取记忆（仅用户明确要求时）
-    _extract_memory(agent, user_input, result)
-
-    # 7. 检查是否需要压缩
+    # 6. 检查是否需要压缩
     if should_compress(session.messages):
         old_msgs, recent_msgs = split_for_compress(session.messages)
         if old_msgs:
@@ -233,34 +230,6 @@ async def _handle_with_session(agent, user_input: str, on_token=None) -> str:
 
     logger.info(f"Result: {result[:100]}")
     return result
-
-
-def _extract_memory(agent, user_input: str, result: str) -> None:
-    """仅在用户明确要求记住时写入长期记忆。"""
-    import re
-
-    remember_patterns = [
-        r"^(记住|记下来|帮我记|帮我记住|记一下)\s*[:：]?\s*(.+)",
-        r"^(remember|note down)\s*[:：]?\s*(.+)",
-    ]
-
-    for pattern in remember_patterns:
-        m = re.match(pattern, user_input, re.IGNORECASE)
-        if m:
-            content = m.group(2).strip()
-            if content:
-                agent.long_term.add(content, keywords=_extract_keywords(content))
-                logger.info(f"Memory saved: {content[:50]}")
-            break
-
-
-def _extract_keywords(text: str) -> list[str]:
-    """简单关键词提取。"""
-    stop_words = {"the", "a", "an", "is", "are", "was", "were",
-                  "in", "on", "at", "to", "for", "of", "and", "or",
-                  "帮我", "请", "的", "了", "是", "在", "一下", "看看"}
-    words = text.lower().split()
-    return [w for w in words if len(w) > 1 and w not in stop_words][:8]
 
 
 if __name__ == "__main__":

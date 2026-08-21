@@ -61,7 +61,9 @@ class ToolRegistry:
 def build_default_tools() -> ToolRegistry:
     """构建默认工具集。"""
     from iterm_agent.tools.run_command import run_command_tool
+    from iterm_agent.tools.remember import remember_tool
 
     reg = ToolRegistry()
     reg.register(run_command_tool)
+    reg.register(remember_tool)
     return reg
