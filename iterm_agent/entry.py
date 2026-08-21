@@ -121,19 +121,19 @@ def build_agent(config_path: str | None = None) -> Orchestrator:
         "base_url": config.llm.base_url,
     })
 
+    # 创建长期记忆
+    long_term = LongTermStore(
+        path=config.memory.long_term_path,
+        max_entries=config.memory.max_facts,
+    )
+
     # 创建工具集
-    tools = build_default_tools()
+    tools = build_default_tools(long_term=long_term)
 
     # 创建护栏
     guardrail = GuardrailEngine(
         enabled=config.guardrail.enabled,
         timeout=config.guardrail.timeout,
-    )
-
-    # 创建长期记忆
-    long_term = LongTermStore(
-        path=config.memory.long_term_path,
-        max_entries=config.memory.max_facts,
     )
 
     # 创建 Orchestrator

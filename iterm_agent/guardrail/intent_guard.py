@@ -55,9 +55,7 @@ class IntentGuard:
         Returns:
             (是否通过, 拒绝原因)
         """
-        # 1. 命令长度检查
-        if len(command) > self.max_command_length:
-            return False, f"命令过长（{len(command)} 字符，上限 {self.max_command_length}），疑似注入"
+        # 1. 命令长度检查（已移除，不再限制命令长度）
 
         # 2. 多命令拼接检查：拆分后逐段检查
         segments = re.split(r";|&&|\|\|", command)
