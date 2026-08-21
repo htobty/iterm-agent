@@ -48,9 +48,11 @@ _iterm_agent_should_intercept() {
         return 1
     fi
 
-    # 是 zsh 内建 → 不拦截
+    # 是 zsh 内建（仅保留"几乎不可能是自然语言首词"的）→ 不拦截
+    # 注意：help/set/time/kill/select/read/print/test/return/wait/let/type/which/where
+    # 这些词可能出现在自然语言中，不放入白名单，让它们走 Agent
     case "$first_word" in
-        cd|echo|export|set|unset|source|alias|unalias|bindkey|zle|typeset|declare|local|readonly|return|exit|exec|eval|wait|jobs|fg|bg|kill|trap|ulimit|umask|getopts|hash|history|fc|print|printf|read|select|time|true|false|test|let|shift|pushd|popd|dirs|pwd|type|which|where|whence|command|coproc|disable|enable|disown|emulate|float|integer|log|noglob|rehash|sched|setcap|setopt|unsetopt|var|vared|zcompile|zformat|zftp|zmodload|zparseopts|zprof|zpty|zregexparse|zsocket|zstyle|ztcp|autoload|builtin|caller|compadd|compcall|compdescribe|compfiles|compget|compquote|compscan|compset|compsub|comptry|compdump|compinit)
+        cd|pwd|export|source|unset|alias|unalias|bindkey|zle|typeset|declare|local|readonly|exit|exec|eval|jobs|fg|bg|trap|ulimit|umask|getopts|hash|history|fc|true|false|shift|pushd|popd|dirs|whence|command|coproc|disable|enable|disown|emulate|float|integer|log|noglob|rehash|sched|setcap|setopt|unsetopt|var|vared|zcompile|zformat|zftp|zmodload|zparseopts|zprof|zpty|zregexparse|zsocket|zstyle|ztcp|autoload|builtin|caller|compadd|compcall|compdescribe|compfiles|compget|compquote|compscan|compset|compsub|comptry|compdump|compinit)
             return 1
             ;;
     esac
