@@ -22,9 +22,8 @@ _iterm_agent_should_intercept() {
 
     [[ -z "$input" ]] && return 1
 
-    # ===== 快速路径：首字符是非 ASCII（中文、日文等）→ 一定是自然语言 =====
-    local first_char="${input:0:1}"
-    if [[ "$first_char" == [^[:ascii:]] ]]; then
+    # ===== 快速路径：输入包含非 ASCII 字符（中文、日文等）→ 一定是自然语言 =====
+    if [[ "$input" == *[^[:ascii:]]* ]]; then
         return 0
     fi
 
