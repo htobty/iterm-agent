@@ -59,6 +59,21 @@ def _has_markdown(text: str) -> bool:
     return False
 
 
+def _estimate_display_lines(text: str) -> int:
+    """估算文本在终端中实际占用的行数（考虑终端宽度 wrap）。"""
+    import shutil
+    try:
+        term_width = shutil.get_terminal_size().columns
+    except Exception:
+        term_width = 80
+    total = 0
+    for line in text.split("\n"):
+        # 去掉 ANSI 转义序列
+        clean = re.sub(r'\033\[[0-9;]*[a-zA-Z]', '', line)
+        total += max(1, -(-len(clean) // term_width))  # ceil division
+    return total
+
+
 def _render_markdown(text: str) -> None:
     """用 rich 渲染 Markdown 到终端。"""
     from rich.console import Console
@@ -184,8 +199,8 @@ async def _stream_handle(agent, user_input: str, force_agent: bool = False) -> N
     # 流式输出已完成，检查是否需要 Markdown 渲染
     accumulated = "".join(full_text)
     if _has_markdown(accumulated):
-        # 计算输出行数（从 spinner 清除后的位置开始）
-        line_count = accumulated.count("\n") + 1
+        # 计算输出实际占用的终端行数（考虑 wrap）
+        line_count = _estimate_display_lines(accumulated)
         # 上移到输出起始位置，清除到屏幕底部
         sys.stdout.write(f"\033[{line_count}A\033[J")
         sys.stdout.flush()
