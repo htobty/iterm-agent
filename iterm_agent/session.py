@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import time
@@ -74,7 +75,11 @@ class SessionStore:
         if path.exists():
             try:
                 with open(path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
+                    fcntl.flock(f, fcntl.LOCK_SH)
+                    try:
+                        data = json.load(f)
+                    finally:
+                        fcntl.flock(f, fcntl.LOCK_UN)
                 return Session(
                     session_id=data.get("session_id", session_id),
                     created_at=data.get("created_at", time.time()),
@@ -89,7 +94,7 @@ class SessionStore:
         return Session(session_id=session_id)
 
     def save(self, session: Session) -> None:
-        """保存会话到文件。"""
+        """保存会话到文件（带文件锁）。"""
         path = self._path(session.session_id)
         data = {
             "session_id": session.session_id,
@@ -99,7 +104,11 @@ class SessionStore:
             "messages": session.messages,
         }
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
 
     def list_sessions(self) -> list[dict[str, Any]]:
         """列出所有会话（调试用）。"""

@@ -88,6 +88,9 @@ _iterm_agent_run() {
 
     # 结束后换行
     print ""
+
+    # 确保退出码为 0，不影响 iTerm2 箭头颜色
+    return 0
 }
 
 # 自定义 accept-line widget

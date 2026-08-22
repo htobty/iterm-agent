@@ -113,6 +113,12 @@ def build_agent(config_path: str | None = None) -> Orchestrator:
     else:
         config = load_config()
 
+    # 启动校验：api_key 必须有效
+    if not config.llm.api_key or config.llm.api_key in ("sk-your-key-here", "sk-xxx", ""):
+        raise ValueError(
+            "api_key 未配置或为占位符。请编辑 ~/.iterm_agent/config.yaml 填入有效的 API Key。"
+        )
+
     # 创建 LLM Provider
     llm = create_provider({
         "provider": config.llm.provider,

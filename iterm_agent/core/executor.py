@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any, Awaitable, Callable
@@ -70,18 +71,26 @@ class Executor:
         ctx: AgentContext,
         on_token: TokenCallback | None = None,
     ) -> str:
-        """执行 ReAct 循环，返回最终结果文本。
+        """执行 ReAct 循环，返回最终结果文本。带整体超时保护。"""
+        try:
+            return await asyncio.wait_for(
+                self._execute_inner(user_input, ctx, on_token),
+                timeout=300,  # 整体 5 分钟超时
+            )
+        except asyncio.TimeoutError:
+            logger.warning("整体执行超时（300s）")
+            return "[TIMEOUT] 任务执行超时（5分钟），已终止。请简化指令后重试。"
 
-        Args:
-            user_input: 用户的自然语言输入
-            ctx: Agent 上下文
-            on_token: 流式 token 回调（仅最终回复时触发）
-
-        Returns:
-            最终结果文本
-        """
+    async def _execute_inner(
+        self,
+        user_input: str,
+        ctx: AgentContext,
+        on_token: TokenCallback | None = None,
+    ) -> str:
+        """ReAct 循环核心逻辑。"""
         messages = ctx.build_messages(SYSTEM_PROMPT, user_input)
         tool_schemas = self.tools.get_schemas()
+        seen_commands: set[str] = set()
 
         for step in range(self.max_steps):
             logger.info(f"ReAct step {step + 1}/{self.max_steps}")
@@ -122,38 +131,49 @@ class Executor:
                     if func_name == "run_command":
                         command = params.get("command", "")
 
-                        # 意图校验：防止 prompt injection
-                        intent_passed, intent_reason = self.intent_guard.check(user_input, command)
-                        if not intent_passed:
+                        # 重复命令检测
+                        cmd_key = command.strip()
+                        if cmd_key in seen_commands:
                             observation = (
-                                f"[INTENT_BLOCKED] {intent_reason}\n"
-                                f"命令: {command}\n"
-                                f"该命令与用户意图不匹配，已拒绝执行。"
-                                f"请根据用户实际意图重新生成命令。"
+                                f"[REPEATED] 该命令已执行过，结果不会改变。"
+                                f"请换一种方式完成任务，或直接向用户报告当前结果。"
                             )
-                            logger.warning(f"  INTENT_BLOCKED: {intent_reason}")
+                            logger.warning(f"  REPEATED: {cmd_key[:80]}")
                         else:
-                            guard_result = self.guardrail.check(command)
+                            seen_commands.add(cmd_key)
 
-                            if guard_result.action == GuardrailAction.BLOCK:
+                            # 意图校验：防止 prompt injection
+                            intent_passed, intent_reason = self.intent_guard.check(user_input, command)
+                            if not intent_passed:
                                 observation = (
-                                    f"[BLOCKED] {guard_result.reason}\n"
+                                    f"[INTENT_BLOCKED] {intent_reason}\n"
                                     f"命令: {command}\n"
-                                    f"请换一个安全的方案，或告知用户该操作被禁止。"
+                                    f"该命令与用户意图不匹配，已拒绝执行。"
+                                    f"请根据用户实际意图重新生成命令。"
                                 )
-                                logger.warning(f"  BLOCKED: {guard_result.reason}")
-                            elif guard_result.needs_confirmation:
-                                confirmed = await self._confirm(command, guard_result.reason)
-                                if not confirmed:
+                                logger.warning(f"  INTENT_BLOCKED: {intent_reason}")
+                            else:
+                                guard_result = self.guardrail.check(command)
+
+                                if guard_result.action == GuardrailAction.BLOCK:
                                     observation = (
-                                        f"[REJECTED] 用户拒绝了该操作。\n"
+                                        f"[BLOCKED] {guard_result.reason}\n"
                                         f"命令: {command}\n"
-                                        f"请询问用户是否需要替代方案。"
+                                        f"请换一个安全的方案，或告知用户该操作被禁止。"
                                     )
+                                    logger.warning(f"  BLOCKED: {guard_result.reason}")
+                                elif guard_result.needs_confirmation:
+                                    confirmed = await self._confirm(command, guard_result.reason)
+                                    if not confirmed:
+                                        observation = (
+                                            f"[REJECTED] 用户拒绝了该操作。\n"
+                                            f"命令: {command}\n"
+                                            f"请询问用户是否需要替代方案。"
+                                        )
+                                    else:
+                                        observation = await self.tools.execute(func_name, params)
                                 else:
                                     observation = await self.tools.execute(func_name, params)
-                            else:
-                                observation = await self.tools.execute(func_name, params)
                     else:
                         observation = await self.tools.execute(func_name, params)
 
@@ -173,7 +193,7 @@ class Executor:
             return final_answer
 
         # 循环结束：如果最后一步是工具调用，额外给 LLM 一次机会输出总结
-        if messages and messages[-1]["role"] == "user" and "工具" in messages[-1]["content"]:
+        if messages and messages[-1]["role"] == "tool":
             logger.info("Max steps reached, requesting final summary from LLM")
             try:
                 final_response = await self.llm.chat_stream(

@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, APIError, APITimeoutError, RateLimitError
 
 from iterm_agent.llm.base import LLMProvider, LLMResponse, TokenCallback
 
 logger = logging.getLogger(__name__)
+
+MAX_RETRIES = 3
+RETRY_BACKOFF = [2, 5, 15]  # 秒
+CALL_TIMEOUT = 120  # 单次 LLM 调用超时（秒）
 
 
 class OpenAIProvider(LLMProvider):
@@ -78,7 +83,32 @@ class OpenAIProvider(LLMProvider):
         on_token: TokenCallback | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
-        """流式对话：逐 token 回调 on_token，最终返回完整响应。"""
+        """流式对话：逐 token 回调 on_token，最终返回完整响应。带重试和超时。"""
+        last_error = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                return await asyncio.wait_for(
+                    self._do_chat_stream(messages, tools, temperature, max_tokens, on_token),
+                    timeout=CALL_TIMEOUT,
+                )
+            except (APITimeoutError, RateLimitError, APIError, asyncio.TimeoutError) as e:
+                last_error = e
+                logger.warning(f"LLM call attempt {attempt + 1}/{MAX_RETRIES} failed: {e}")
+                if attempt < MAX_RETRIES - 1:
+                    await asyncio.sleep(RETRY_BACKOFF[attempt])
+                    # 重试时不再回调 on_token（避免重复输出）
+                    on_token = None
+        raise last_error
+
+    async def _do_chat_stream(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, Any]] | None,
+        temperature: float,
+        max_tokens: int,
+        on_token: TokenCallback | None,
+    ) -> LLMResponse:
+        """实际执行流式调用。"""
         params: dict[str, Any] = {
             "model": self.model,
             "messages": messages,

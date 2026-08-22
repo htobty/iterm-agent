@@ -105,14 +105,21 @@ def main() -> None:
     user_input = " ".join(args)
     logger.info(f"Input: {user_input} (force_agent={force_agent})")
 
-    from iterm_agent.entry import build_agent
-    agent = build_agent()
+    try:
+        from iterm_agent.entry import build_agent
+        agent = build_agent()
 
-    if json_output:
-        result = asyncio.run(_handle_with_session(agent, user_input))
-        print(json.dumps({"result": result}, ensure_ascii=False))
-    else:
-        asyncio.run(_stream_handle(agent, user_input, force_agent=force_agent))
+        if json_output:
+            result = asyncio.run(_handle_with_session(agent, user_input))
+            print(json.dumps({"result": result}, ensure_ascii=False))
+        else:
+            asyncio.run(_stream_handle(agent, user_input, force_agent=force_agent))
+    except KeyboardInterrupt:
+        print("\n[已取消]")
+    except Exception as e:
+        logger.exception("Agent 执行异常")
+        print(f"\n[错误] {e.__class__.__name__}: {e}")
+        print("详细日志: ~/.iterm_agent/agent.log")
 
 
 async def _stream_handle(agent, user_input: str, force_agent: bool = False) -> None:
