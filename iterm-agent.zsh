@@ -16,6 +16,31 @@ ITERM_AGENT_PREFIX="ai"
 
 # ===== 内部函数 =====
 
+# 判断参数部分是否包含命令结构信号（跨语言通用）
+# 有结构信号 → 大概率是真正的命令参数
+_iterm_agent_has_structural_signals() {
+    local args="$1"
+
+    # - 或 -- 开头的 flag
+    [[ "$args" == *" -"* || "$args" == --* ]] && return 0
+    # @ (user@host)
+    [[ "$args" == *"@"* ]] && return 0
+    # / 或 \ (路径)
+    [[ "$args" == *"/"* || "$args" == *"\\"* ]] && return 0
+    # ~ (home 路径)
+    [[ "$args" == *"~"* ]] && return 0
+    # = (VAR=val)
+    [[ "$args" == *"="* ]] && return 0
+    # : (host:port, drive letter)
+    [[ "$args" == *":"* ]] && return 0
+    # 引号包裹
+    [[ "$args" == *"\""* || "$args" == *"'"* ]] && return 0
+    # . 后跟字母（文件扩展名）
+    [[ "$args" =~ '\.[a-zA-Z]' ]] && return 0
+
+    return 1
+}
+
 # 判断输入是否应该走 Agent
 _iterm_agent_should_intercept() {
     local input="$1"
@@ -28,7 +53,7 @@ _iterm_agent_should_intercept() {
     [[ "$input" == \(* ]] && return 1
 
     # 包含 shell 语法 → 不拦截
-    if [[ "$input" == *"|"* || "$input" == *">"* || "$input" == *"<"* || "$input" == *"&&"* || "$input" == *"||"* ]]; then
+    if [[ "$input" == *"|"* || "$input" == *">"* || "$input" == *"<"* || "$input" == *"&&"* || "$input" == *"||"* || "$input" == *";"* ]]; then
         return 1
     fi
 
@@ -36,38 +61,53 @@ _iterm_agent_should_intercept() {
     first_word="${first_word##*/}"
 
     [[ -z "$first_word" ]] && return 1
-    [[ "$first_word" == [0-9]* ]] && return 1
+    # 纯 ASCII 且以数字开头 → 可能是版本号/端口号等，不拦截
+    # 含非 ASCII 则跳过此规则（如 "192.168.50.223就是我的台式机"）
+    if [[ "$input" != *[^[:ascii:]]* && "$first_word" == [0-9]* ]]; then
+        return 1
+    fi
 
-    # 是系统命令 → 不拦截（即使参数中包含中文路径）
+    # 判断首词是否是已知命令
+    local is_command=0
     if command -v "$first_word" &>/dev/null; then
-        return 1
+        is_command=1
+    fi
+    # zsh 内建
+    if [[ "$is_command" == "0" ]]; then
+        case "$first_word" in
+            cd|pwd|export|source|unset|alias|unalias|bindkey|zle|typeset|declare|local|readonly|exit|exec|eval|jobs|fg|bg|trap|ulimit|umask|getopts|hash|history|fc|true|false|shift|pushd|popd|dirs|whence|command|coproc|disable|enable|disown|emulate|float|integer|log|noglob|rehash|sched|setcap|setopt|unsetopt|var|vared|zcompile|zformat|zftp|zmodload|zparseopts|zprof|zpty|zregexparse|zsocket|zstyle|ztcp|autoload|builtin|caller|compadd|compcall|compdescribe|compfiles|compget|compquote|compscan|compset|compsub|comptry|compdump|compinit)
+                is_command=1
+                ;;
+        esac
+    fi
+    # zsh 函数
+    if [[ "$is_command" == "0" ]] && typeset -f "$first_word" &>/dev/null; then
+        is_command=1
+    fi
+    # 别名
+    if [[ "$is_command" == "0" ]] && alias "$first_word" &>/dev/null; then
+        is_command=1
     fi
 
-    # 是 zsh 内建（仅保留"几乎不可能是自然语言首词"的）→ 不拦截
-    # 注意：help/set/time/kill/select/read/print/test/return/wait/let/type/which/where
-    # 这些词可能出现在自然语言中，不放入白名单，让它们走 Agent
-    case "$first_word" in
-        cd|pwd|export|source|unset|alias|unalias|bindkey|zle|typeset|declare|local|readonly|exit|exec|eval|jobs|fg|bg|trap|ulimit|umask|getopts|hash|history|fc|true|false|shift|pushd|popd|dirs|whence|command|coproc|disable|enable|disown|emulate|float|integer|log|noglob|rehash|sched|setcap|setopt|unsetopt|var|vared|zcompile|zformat|zftp|zmodload|zparseopts|zprof|zpty|zregexparse|zsocket|zstyle|ztcp|autoload|builtin|caller|compadd|compcall|compdescribe|compfiles|compget|compquote|compscan|compset|compsub|comptry|compdump|compinit)
-            return 1
-            ;;
-    esac
-
-    # 是 zsh 函数 → 不拦截
-    if typeset -f "$first_word" &>/dev/null; then
-        return 1
-    fi
-
-    # 是别名 → 不拦截
-    if alias "$first_word" &>/dev/null; then
-        return 1
-    fi
-
-    # 首词不是已知命令，且包含非 ASCII 字符（中文、日文等）→ 自然语言
-    if [[ "$input" == *[^[:ascii:]]* ]]; then
+    # 首词不是已知命令 → Agent
+    if [[ "$is_command" == "0" ]]; then
         return 0
     fi
 
-    # 不是已知命令 → 走 Agent
+    # 首词是已知命令：
+    # 参数纯 ASCII → Shell（无歧义）
+    local args="${input#"$first_word"}"
+    args="${args# }"
+    if [[ "$args" != *[^[:ascii:]]* ]]; then
+        return 1
+    fi
+
+    # 参数含非 ASCII：检查结构信号
+    if _iterm_agent_has_structural_signals "$args"; then
+        return 1  # 有结构信号 → Shell
+    fi
+
+    # 无结构信号 → Agent（大概率是自然语言提问）
     return 0
 }
 
