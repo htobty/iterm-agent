@@ -54,6 +54,9 @@ async def _run_command_handler(command: str, timeout: int = 30, cwd: str | None 
             result = f"[TIMEOUT] 命令执行超时（{timeout}s）: {command}"
             _audit_log(command, result, exit_code=-1)
             return result
+        # Python 3.9 workaround: 断开 transport 引用，
+        # 防止 asyncio.run() 关闭事件循环后 GC 触发 __del__ 报错
+        proc._transport = None
 
         output_parts = []
         if stdout:
