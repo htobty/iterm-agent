@@ -22,11 +22,6 @@ _iterm_agent_should_intercept() {
 
     [[ -z "$input" ]] && return 1
 
-    # ===== 快速路径：输入包含非 ASCII 字符（中文、日文等）→ 一定是自然语言 =====
-    if [[ "$input" == *[^[:ascii:]]* ]]; then
-        return 0
-    fi
-
     # 注释、历史、子 shell → 不拦截
     [[ "$input" == \#* ]] && return 1
     [[ "$input" == \!* ]] && return 1
@@ -43,7 +38,7 @@ _iterm_agent_should_intercept() {
     [[ -z "$first_word" ]] && return 1
     [[ "$first_word" == [0-9]* ]] && return 1
 
-    # 是系统命令 → 不拦截
+    # 是系统命令 → 不拦截（即使参数中包含中文路径）
     if command -v "$first_word" &>/dev/null; then
         return 1
     fi
@@ -65,6 +60,11 @@ _iterm_agent_should_intercept() {
     # 是别名 → 不拦截
     if alias "$first_word" &>/dev/null; then
         return 1
+    fi
+
+    # 首词不是已知命令，且包含非 ASCII 字符（中文、日文等）→ 自然语言
+    if [[ "$input" == *[^[:ascii:]]* ]]; then
+        return 0
     fi
 
     # 不是已知命令 → 走 Agent
