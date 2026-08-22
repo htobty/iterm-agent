@@ -18,6 +18,17 @@ _AUDIT_DIR = os.path.expanduser("~/.iterm_agent")
 _AUDIT_FILE = os.path.join(_AUDIT_DIR, "audit.log")
 
 
+def _decode_output(data: bytes) -> str:
+    """解码命令输出：优先 UTF-8，失败则尝试 GBK（Windows 中文环境）。"""
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            return data.decode("gbk")
+        except UnicodeDecodeError:
+            return data.decode("utf-8", errors="replace")
+
+
 def _audit_log(command: str, result: str, exit_code: int | None = None) -> None:
     """记录命令执行到审计日志。"""
     try:
@@ -64,9 +75,9 @@ async def _run_command_handler(command: str, timeout: int = 30, cwd: str | None 
 
         output_parts = []
         if stdout:
-            output_parts.append(stdout.decode("utf-8", errors="replace"))
+            output_parts.append(_decode_output(stdout))
         if stderr:
-            output_parts.append(f"[STDERR]\n{stderr.decode('utf-8', errors='replace')}")
+            output_parts.append(f"[STDERR]\n{_decode_output(stderr)}")
         if not stdout and not stderr:
             output_parts.append("(no output)")
         output_parts.append(f"[EXIT CODE: {returncode}]")
