@@ -54,11 +54,13 @@ async def _run_command_handler(command: str, timeout: int = 30, cwd: str | None 
             result = f"[TIMEOUT] 命令执行超时（{timeout}s）: {command}"
             _audit_log(command, result, exit_code=-1)
             return result
-        # 先取 returncode，再断开 transport 引用
-        # （Python 3.9 workaround: 防止 asyncio.run() 关闭事件循环后
-        #  GC 触发 transport.__del__ 报 RuntimeError）
-        returncode = proc.returncode
-        proc._transport = None
+        # Python 3.9: Process.returncode 直接调用
+        # self._transport.get_returncode()，无 None 保护；
+        # communicate() 后 transport 可能已被内部清理。
+        try:
+            returncode = proc.returncode
+        except (AttributeError, TypeError):
+            returncode = None
 
         output_parts = []
         if stdout:
@@ -69,7 +71,7 @@ async def _run_command_handler(command: str, timeout: int = 30, cwd: str | None 
         result = "\n".join(output_parts)
 
         # 审计日志
-        _audit_log(command, result, exit_code=proc.returncode)
+        _audit_log(command, result, exit_code=returncode)
 
         return result
 
