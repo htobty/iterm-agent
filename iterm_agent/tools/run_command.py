@@ -67,6 +67,8 @@ async def _run_command_handler(command: str, timeout: int = 30, cwd: str | None 
             output_parts.append(stdout.decode("utf-8", errors="replace"))
         if stderr:
             output_parts.append(f"[STDERR]\n{stderr.decode('utf-8', errors='replace')}")
+        if not stdout and not stderr:
+            output_parts.append("(no output)")
         output_parts.append(f"[EXIT CODE: {returncode}]")
         result = "\n".join(output_parts)
 

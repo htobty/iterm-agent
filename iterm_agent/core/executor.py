@@ -90,7 +90,7 @@ class Executor:
         """ReAct 循环核心逻辑。"""
         messages = ctx.build_messages(SYSTEM_PROMPT, user_input)
         tool_schemas = self.tools.get_schemas()
-        seen_commands: set[str] = set()
+        last_command: str | None = None  # 只拦截连续重复
 
         for step in range(self.max_steps):
             logger.info(f"ReAct step {step + 1}/{self.max_steps}")
@@ -131,16 +131,17 @@ class Executor:
                     if func_name == "run_command":
                         command = params.get("command", "")
 
-                        # 重复命令检测
+                        # 连续重复命令检测（只拦截上一步刚执行过的相同命令，
+                        # 中间有其他命令执行过则放行，因为状态可能已变化）
                         cmd_key = command.strip()
-                        if cmd_key in seen_commands:
+                        if cmd_key == last_command:
                             observation = (
-                                f"[REPEATED] 该命令已执行过，结果不会改变。"
+                                f"[REPEATED] 该命令与上一步完全相同，结果不会改变。"
                                 f"请换一种方式完成任务，或直接向用户报告当前结果。"
                             )
-                            logger.warning(f"  REPEATED: {cmd_key[:80]}")
+                            logger.warning(f"  REPEATED (consecutive): {cmd_key[:80]}")
                         else:
-                            seen_commands.add(cmd_key)
+                            last_command = cmd_key
 
                             # 意图校验：防止 prompt injection
                             intent_passed, intent_reason = self.intent_guard.check(user_input, command)
