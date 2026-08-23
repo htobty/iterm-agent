@@ -6,30 +6,13 @@
 
 **A lightweight agent that turns iTerm2 into your intelligent assistant in seconds.**
 
-<p align="center">
-  <img src="docs/demo_en.gif" alt="iTerm Agent Demo" width="720"/>
-</p>
-
 [中文](README.zh.md) | English
 
 Type natural language in iTerm2. The agent plans, executes, and verifies — all by itself. Your normal commands are untouched.
 
-```
-➜  ~ show me which Python projects are in the current directory
-There are 3 Python projects in the current directory:
-  1. iterm-agent/ — this project
-  2. data-pipeline/ — ETL scripts
-  3. web-scraper/ — web scraping tool
-
-➜  ~ start the local model server
-[exec] start llama-server.exe --port 8000 ...
-[exec] curl -s http://localhost:8000/health
-Model server is up, health check passed.
-
-➜  ~ ls -la          ← normal command, not intercepted
-total 48
-drwxr-xr-x  12 admin  staff  384 Aug 21 10:00 .
-```
+<p align="center">
+  <img src="docs/demo_en.gif" alt="iTerm Agent Demo" width="720"/>
+</p>
 
 ## The Problem It Solves
 

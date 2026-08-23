@@ -6,30 +6,13 @@
 
 **一个让iTerm2 秒变智能助手的轻量级 Agent。**
 
-<p align="center">
-  <img src="docs/demo.gif" alt="iTerm Agent 演示" width="720"/>
-</p>
-
 中文 | [English](README.md)
 
 在 iTerm2 里输入自然语言，Agent 自己规划、自己执行、自己验证。普通命令不受影响。
 
-```
-➜  ~ 帮我看看当前目录有哪些 Python 项目
-当前目录下有 3 个 Python 项目：
-  1. iterm-agent/ — 本项目
-  2. data-pipeline/ — ETL 脚本
-  3. web-scraper/ — 爬虫工具
-
-➜  ~ 帮我启动本地模型
-[执行]start llama-server.exe --port 8000 ..."
-[执行] curl -s http://localhost:8000/health"
-模型服务已启动，健康检查通过。
-
-➜  ~ ls -la          ← 正常命令，不拦截
-total 48
-drwxr-xr-x  12 admin  staff  384 Aug 21 10:00 .
-```
+<p align="center">
+  <img src="docs/demo.gif" alt="iTerm Agent 演示" width="720"/>
+</p>
 
 ## 它解决什么问题
 
