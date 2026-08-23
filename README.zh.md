@@ -6,6 +6,10 @@
 
 **一个让iTerm2 秒变智能助手的轻量级 Agent。**
 
+<p align="center">
+  <img src="docs/demo.gif" alt="iTerm Agent 演示" width="720"/>
+</p>
+
 中文 | [English](README.md)
 
 在 iTerm2 里输入自然语言，Agent 自己规划、自己执行、自己验证。普通命令不受影响。

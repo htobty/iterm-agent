@@ -80,7 +80,7 @@
     <circle cx="64" cy="18" r="6" fill="#28c840"/>
     <text x="310" y="23" font-family="-apple-system, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">htob@mac ~</text>
 
-    <g transform="translate(20, 56)" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', monospace" font-size="13">
+    <g transform="translate(20, 44)" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', monospace" font-size="12">
       <text x="0" y="0" fill="#00d4aa">➜</text>
       <text x="22" y="0" fill="#63b3ed"> ~</text>
       <text x="42" y="0" fill="#e2e8f0">帮我启动本地模型</text>
@@ -89,7 +89,7 @@
       <text x="22" y="28" fill="#4a5568"> 规划中...</text>
 
       <text x="0" y="60" fill="#00d4aa">  ✓</text>
-      <text x="22" y="60" fill="#a0aec0">ssh htob@192.168.50.223 "start llama-server.exe --port 8989 ..."</text>
+      <text x="22" y="60" fill="#a0aec0">ssh htob@192.168.50.223 "start llama-server.exe ..."</text>
 
       <text x="0" y="88" fill="#00d4aa">  ✓</text>
       <text x="22" y="88" fill="#a0aec0">ssh htob@192.168.50.223 "curl -s http://localhost:8989/health"</text>
@@ -119,15 +119,15 @@
 
       <line x1="0" y1="371" x2="580" y2="371" stroke="#2d3348" stroke-width="0.5" stroke-dasharray="4,4"/>
 
-      <text x="0" y="401" fill="#00d4aa">➜</text>
-      <text x="22" y="401" fill="#63b3ed"> ~</text>
-      <text x="42" y="401" fill="#e2e8f0">看看台式机磁盘还剩多少</text>
+      <text x="0" y="395" fill="#00d4aa">➜</text>
+      <text x="22" y="395" fill="#63b3ed"> ~</text>
+      <text x="42" y="395" fill="#e2e8f0">看看台式机磁盘还剩多少</text>
 
-      <text x="0" y="429" fill="#00d4aa">  ✓</text>
-      <text x="22" y="429" fill="#a0aec0">ssh htob@192.168.50.223 "df -h /"</text>
+      <text x="0" y="420" fill="#00d4aa">  ✓</text>
+      <text x="22" y="420" fill="#a0aec0">ssh htob@192.168.50.223 "df -h /"</text>
 
-      <text x="0" y="457" fill="#00d4aa">  ✓</text>
-      <text x="22" y="457" fill="#e2e8f0">C: 剩余 234GB / 共 512GB（46% 已用）</text>
+      <text x="0" y="445" fill="#00d4aa">  ✓</text>
+      <text x="22" y="445" fill="#e2e8f0">C: 234GB free / 512GB total</text>
     </g>
   </g>
 

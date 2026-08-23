@@ -6,6 +6,10 @@
 
 **A lightweight agent that turns iTerm2 into your intelligent assistant in seconds.**
 
+<p align="center">
+  <img src="docs/demo_en.gif" alt="iTerm Agent Demo" width="720"/>
+</p>
+
 [中文](README.zh.md) | English
 
 Type natural language in iTerm2. The agent plans, executes, and verifies — all by itself. Your normal commands are untouched.
