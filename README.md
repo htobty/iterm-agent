@@ -1,38 +1,29 @@
----
-name: iterm_agent_readme
-title: iTerm Agent
-description: English | 中文 在 iTerm2 里输入自然语言，LLM 自己规划、自己执行、自己验证。普通命令不受影响，装完就忘。
-summary: English | 中文 在 iTerm2 里输入自然语言，LLM 自己规划、自己执行、自己验证。普通命令不受影响，装完就忘。
-keywords: []
-category: Users/htob/code/iterm-agent
----
-
 # iTerm Agent
 
-**A lightweight agent that turns iTerm2 into your intelligent assistant.**
+**A lightweight agent that turns iTerm2 into your intelligent assistant in seconds.**
 
 [中文](README.zh.md) | English
 
-Type natural language in iTerm2. The agent plans, executes, and verifies — all by itself. Your normal commands are untouched. Install and forget.
+Type natural language in iTerm2. The agent plans, executes, and verifies — all by itself. Your normal commands are untouched.
 
 ```
-➜  ~ 帮我看看当前目录有哪些 Python 项目
-当前目录下有 3 个 Python 项目：
-  1. iterm-agent/ — 本项目
-  2. data-pipeline/ — ETL 脚本
-  3. web-scraper/ — 爬虫工具
+➜  ~ show me which Python projects are in the current directory
+There are 3 Python projects in the current directory:
+  1. iterm-agent/ — this project
+  2. data-pipeline/ — ETL scripts
+  3. web-scraper/ — web scraping tool
 
-➜  ~ 帮我启动 192.168.50.223 上的模型服务
-[执行] ssh htob@192.168.50.223 "start llama-server.exe --port 8989 ..."
-[执行] ssh htob@192.168.50.223 "curl -s http://localhost:8989/health"
-模型服务已启动，健康检查通过。
+➜  ~ start the local model server
+[exec] start llama-server.exe --port 8000 ...
+[exec] curl -s http://localhost:8000/health
+Model server is up, health check passed.
 
 ➜  ~ ls -la          ← normal command, not intercepted
 total 48
-drwxr-xr-x  12 htob  staff  384 Aug 21 10:00 .
+drwxr-xr-x  12 admin  staff  384 Aug 21 10:00 .
 ```
 
-## The Problem
+## The Problem It Solves
 
 Every day in the terminal: SSH in → `cd` → `git pull` → run tests → check logs → restart service. Switch machines, do it again. Forget a flag, `--help`. Typo a command, start over.
 
@@ -43,10 +34,8 @@ iterm-agent lets you say it in one sentence. It's not autocomplete. It's not a t
 | | Codex / Claude Code | iterm-agent |
 |---|---|---|
 | Focus | Software engineering (write code, refactor) | Terminal operations (ops, remote management, daily chores) |
-| Model | Locked to vendor | Any OpenAI-compatible endpoint, including local models |
-| Cost | Per-token billing | Free with local models |
-| Privacy | Context sent to cloud | Can stay entirely on your machine |
-| Environment | Sandbox / project directory | Your real shell, can SSH anywhere |
+| Privacy | Context sent to cloud | Can use local models, nothing leaves your machine |
+| Environment | Sandbox / project directory | Your real shell |
 | Intrusiveness | Separate tool | Embedded in your existing terminal, invisible when not used |
 
 Write code with Claude Code. Get things done with iterm-agent. Complementary, not competing.
@@ -55,13 +44,11 @@ Write code with Claude Code. Get things done with iterm-agent. Complementary, no
 
 ### Smart Routing — Never Hijacks Your Shell
 
-Type `git status` and it runs `git status`. Type `ssh htob@192.168.50.223 "H:\\下载\\llama-server.exe"` and it runs normally — even with Chinese characters in the path.
-
-Routing is based on **structural signals** (`-`, `@`, `/`, `~`, `=`, `:`, quotes, file extensions), not language enumeration. Works with Chinese, Japanese, Korean, or any language.
+Routing is based on **structural signals** (`-`, `@`, `/`, `~`, `=`, `:`, quotes, file extensions). Natural language in any language is correctly identified.
 
 ### Any Model, Zero Lock-in
 
-DeepSeek, Moonshot, OpenAI, local Ollama, llama.cpp, vLLM — change one line:
+Not tied to any vendor. DeepSeek, Moonshot, OpenAI, local Ollama, llama.cpp, vLLM — change one line of `base_url`:
 
 ```yaml
 llm:
@@ -72,11 +59,11 @@ llm:
 
 ### Long-term Memory
 
-Tell it once: "My desktop is 192.168.50.223, username htob." It saves to a local JSON file. Every future remote operation uses it automatically. No repetition.
+Tell it once: "My desktop is 192.168.0.113, username name." It saves to a local memory store. Every future remote operation uses it automatically. No repetition.
 
 ### A Real Agent
 
-ReAct loop, up to 20 steps. It will:
+A lightweight ReAct loop. It will:
 - `ls` to see the directory structure
 - `cd` into it
 - Execute the operation
@@ -145,16 +132,16 @@ guardrail:
 
 ```bash
 # Natural language → Agent handles it
-帮我安装 Python
-看看 nginx 日志今天有没有 500
-把桌面上的 report.csv 里销售额大于 10 万的行筛出来
+install Python for me
+check if there are any 500 errors in today's nginx logs
+filter rows with sales over 100k from report.csv on my desktop
 
 # Remote operations
-帮我关闭 192.168.50.223 上的模型服务
-SSH 到台式机看看磁盘还剩多少
+shut down the model server on my desktop
+SSH to my desktop and check how much disk space is left
 
 # Memory
-192.168.50.223 就是我的台式机，请记住
+192.168.0.133 is my desktop, remember that
 
 # Force agent mode with 'ai' prefix
 ai what is docker
@@ -189,7 +176,7 @@ User input
                      │
                      ▼
               ┌─────────────┐
-              │  Executor    │  ← ReAct loop (max 20 steps)
+              │  Executor    │  ← ReAct loop
               │  (LLM+Tools) │
               └──────┬──────┘
                      │
@@ -198,19 +185,6 @@ User input
          run_command    remember
          (guardrails)   (long-term memory)
 ```
-
-### Routing Rules
-
-| Condition | Route |
-|-----------|-------|
-| Contains shell syntax (`\|` `>` `<` `&&` `\|\|` `;`) | Shell |
-| First word is not a known command | Agent |
-| First word is a command, args are pure ASCII | Shell |
-| First word is a command, args have non-ASCII + structural signals | Shell |
-| First word is a command, args have non-ASCII + no structural signals | Agent |
-| `ai` prefix | Agent (forced) |
-
-Structural signals: `-`, `--`, `@`, `/`, `\`, `~`, `=`, `:`, quotes, file extensions. Language-agnostic by design.
 
 ## Project Structure
 
