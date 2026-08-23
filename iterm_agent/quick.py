@@ -59,8 +59,20 @@ def _has_markdown(text: str) -> bool:
     return False
 
 
+def _char_width(ch: str) -> int:
+    """计算单个字符的终端显示宽度（CJK 全角字符占 2 列）。"""
+    import unicodedata
+    eaw = unicodedata.east_asian_width(ch)
+    return 2 if eaw in ('W', 'F') else 1
+
+
+def _display_width(text: str) -> int:
+    """计算字符串的终端显示宽度。"""
+    return sum(_char_width(ch) for ch in text)
+
+
 def _estimate_display_lines(text: str) -> int:
-    """估算文本在终端中实际占用的行数（考虑终端宽度 wrap）。"""
+    """估算文本在终端中实际占用的行数（考虑终端宽度 wrap 和全角字符）。"""
     import shutil
     try:
         term_width = shutil.get_terminal_size().columns
@@ -70,7 +82,8 @@ def _estimate_display_lines(text: str) -> int:
     for line in text.split("\n"):
         # 去掉 ANSI 转义序列
         clean = re.sub(r'\033\[[0-9;]*[a-zA-Z]', '', line)
-        total += max(1, -(-len(clean) // term_width))  # ceil division
+        width = _display_width(clean)
+        total += max(1, -(-width // term_width))  # ceil division
     return total
 
 
@@ -160,7 +173,7 @@ async def _stream_handle(agent, user_input: str, force_agent: bool = False) -> N
         sys.stdout.flush()
         return
 
-    # agent 路径：显示 spinner，流式输出
+    # agent 路径：显示 spinner → 流式输出 → 完成后用 rich 重渲染
     sys.stdout.write("\n")
     sys.stdout.flush()
 
@@ -181,33 +194,30 @@ async def _stream_handle(agent, user_input: str, force_agent: bool = False) -> N
 
     result = await _handle_with_session(agent, user_input, on_token=on_token)
 
-    # 如果 on_token 没触发（异常降级），停止 spinner
-    if not first_token_received:
-        stop_event.set()
-
-    # 等待动画任务结束
+    # 停止 spinner
+    stop_event.set()
     await spinner
 
-    # 如果 on_token 没触发，输出完整结果
+    # 如果 on_token 没触发（异常降级），直接输出结果
     if not first_token_received:
         sys.stdout.write(result)
-        sys.stdout.flush()
-        sys.stdout.write("\n")
+        if not result.endswith("\n"):
+            sys.stdout.write("\n")
         sys.stdout.flush()
         return
 
-    # 流式输出已完成，检查是否需要 Markdown 渲染
+    # 流式输出完成，检查是否需要 Markdown 重渲染
     accumulated = "".join(full_text)
     if _has_markdown(accumulated):
-        # 计算输出实际占用的终端行数（考虑 wrap）
+        # 估算流式输出占用的行数，回退并清除
         line_count = _estimate_display_lines(accumulated)
-        # 上移到输出起始位置，清除到屏幕底部
         sys.stdout.write(f"\033[{line_count}A\033[J")
         sys.stdout.flush()
         # 用 rich 渲染
         _render_markdown(accumulated)
     else:
-        sys.stdout.write("\n")
+        if not accumulated.endswith("\n"):
+            sys.stdout.write("\n")
         sys.stdout.flush()
 
 
