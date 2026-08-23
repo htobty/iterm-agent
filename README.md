@@ -9,9 +9,11 @@ category: Users/htob/code/iterm-agent
 
 # iTerm Agent
 
-[English](README.en.md) | [中文](README.md)
+**Talk to your terminal. It gets things done.**
 
-在 iTerm2 里输入自然语言，LLM 自己规划、自己执行、自己验证。普通命令不受影响，装完就忘。
+[中文](README.zh.md) | English
+
+Type natural language in iTerm2. The agent plans, executes, and verifies — all by itself. Your normal commands are untouched. Install and forget.
 
 ```
 ➜  ~ 帮我看看当前目录有哪些 Python 项目
@@ -25,95 +27,95 @@ category: Users/htob/code/iterm-agent
 [执行] ssh htob@192.168.50.223 "curl -s http://localhost:8989/health"
 模型服务已启动，健康检查通过。
 
-➜  ~ ls -la          ← 正常命令，不拦截
+➜  ~ ls -la          ← normal command, not intercepted
 total 48
 drwxr-xr-x  12 htob  staff  384 Aug 21 10:00 .
 ```
 
-## 它解决什么问题
+## The Problem
 
-每天在终端里重复：SSH 上去 → `cd` → `git pull` → 跑测试 → 看日志 → 重启服务。换个环境再来一遍。参数记不住就 `--help`，命令拼错了就重来。
+Every day in the terminal: SSH in → `cd` → `git pull` → run tests → check logs → restart service. Switch machines, do it again. Forget a flag, `--help`. Typo a command, start over.
 
-iterm-agent 让你用一句话完成这些。它不是补全，不是翻译，是一个能自主规划多步操作的 Agent。
+iterm-agent lets you say it in one sentence. It's not autocomplete. It's not a translator. It's an agent that plans multi-step operations on its own.
 
-## 和 Codex / Claude Code 的区别
+## How It Differs from Codex / Claude Code
 
 | | Codex / Claude Code | iterm-agent |
 |---|---|---|
-| 定位 | 软件工程（写代码、重构） | 终端操作（运维、远程管理、日常杂活） |
-| 模型 | 绑定厂商 | 任意 OpenAI 兼容接口，含本地模型 |
-| 成本 | 按 token 付费 | 本地模型零成本 |
-| 隐私 | 上下文发到云端 | 可以完全不出机器 |
-| 环境 | 沙箱 / 项目目录 | 你的真实 shell，能 SSH 到任何机器 |
-| 侵入性 | 独立工具 | 嵌在现有终端，不用时透明 |
+| Focus | Software engineering (write code, refactor) | Terminal operations (ops, remote management, daily chores) |
+| Model | Locked to vendor | Any OpenAI-compatible endpoint, including local models |
+| Cost | Per-token billing | Free with local models |
+| Privacy | Context sent to cloud | Can stay entirely on your machine |
+| Environment | Sandbox / project directory | Your real shell, can SSH anywhere |
+| Intrusiveness | Separate tool | Embedded in your existing terminal, invisible when not used |
 
-写代码用 Claude Code，干活用 iterm-agent。互补，不冲突。
+Write code with Claude Code. Get things done with iterm-agent. Complementary, not competing.
 
-## 核心特点
+## Key Features
 
-### 智能路由，不劫持你的终端
+### Smart Routing — Never Hijacks Your Shell
 
-输入 `git status` 就是 `git status`，输入 `ssh htob@192.168.50.223 "H:\\下载\\llama-server.exe"` 也正常执行——即使参数里有中文路径。
+Type `git status` and it runs `git status`. Type `ssh htob@192.168.50.223 "H:\\下载\\llama-server.exe"` and it runs normally — even with Chinese characters in the path.
 
-路由逻辑基于结构信号（`-`、`@`、`/`、`~`、`=`、`:`、引号、文件扩展名），不依赖语言枚举。中文、日文、韩文、任何语言的自然语言都能正确识别。
+Routing is based on **structural signals** (`-`, `@`, `/`, `~`, `=`, `:`, quotes, file extensions), not language enumeration. Works with Chinese, Japanese, Korean, or any language.
 
-### 模型随便换
+### Any Model, Zero Lock-in
 
-不绑定任何厂商。DeepSeek、Moonshot、OpenAI、本地 Ollama、llama.cpp、vLLM——改一行 `base_url`：
+DeepSeek, Moonshot, OpenAI, local Ollama, llama.cpp, vLLM — change one line:
 
 ```yaml
 llm:
-  base_url: "http://localhost:8080/v1"   # 本地 llama.cpp
+  base_url: "http://localhost:8080/v1"   # local llama.cpp
   model: "qwen3-32b"
   api_key: "not-needed"
 ```
 
-### 长期记忆
+### Long-term Memory
 
-告诉它一次"我的台式机 IP 是 192.168.50.223，用户名 htob"，它存到本地 JSON。以后所有远程操作自动带上，不用每次重复。
+Tell it once: "My desktop is 192.168.50.223, username htob." It saves to a local JSON file. Every future remote operation uses it automatically. No repetition.
 
-### 真正的 Agent
+### A Real Agent
 
-ReAct 循环，最多 20 步。它会：
-- 先 `ls` 看目录结构
-- 再 `cd` 进去
-- 执行操作
-- 验证结果
-- 失败了换个方式重试
+ReAct loop, up to 20 steps. It will:
+- `ls` to see the directory structure
+- `cd` into it
+- Execute the operation
+- Verify the result
+- Retry with a different approach if it fails
 
-不是一问一答，是自主规划 + 执行 + 验证。
+Not one-shot Q&A. Autonomous planning + execution + verification.
 
-### 安全护栏
+### Security Guardrails
 
-它真的会执行命令，所以：
+It actually runs commands, so:
 
-- **黑名单**：`rm -rf /`、`mkfs`、`dd of=/dev/` 直接拒绝
-- **危险确认**：`rm -rf ./subdir`、`chmod 777`、`curl | sh` 需要你按 Enter 确认
-- **超时控制**：命令超时自动 kill
-- **意图校验**：检查 LLM 生成的命令是否偏离你的原始意图
-- **审计日志**：每条命令及结果写入 `~/.iterm_agent/audit.log`
+- **Blacklist**: `rm -rf /`, `mkfs`, `dd of=/dev/` — rejected outright
+- **Danger confirmation**: `rm -rf ./subdir`, `chmod 777`, `curl | sh` — requires Enter to confirm
+- **Timeout**: commands auto-killed after timeout
+- **Intent check**: verifies LLM-generated commands match your original intent
+- **Audit log**: every command and result written to `~/.iterm_agent/audit.log`
 
-### 流式输出 + Markdown 渲染
+### Streaming Output + Markdown Rendering
 
-LLM 回复实时流式显示，结束后自动用 rich 渲染表格、代码块、标题。
+LLM responses stream in real-time. After completion, tables, code blocks, and headings are rendered with rich.
 
-## 安装
+## Install
 
 ```bash
 git clone https://github.com/htobty/iterm-agent.git && bash iterm-agent/install.sh
 ```
 
-重开 iTerm2 窗口，完事。
+Reopen iTerm2. Done.
 
-### 前置要求
+### Requirements
 
 - macOS + iTerm2
 - Python ≥ 3.9
-- 一个 OpenAI 兼容的 LLM（本地或云端）
+- Any OpenAI-compatible LLM (local or cloud)
 
-### 配置
+### Configuration
 
-配置文件：`~/.iterm_agent/config.yaml`
+Config file: `~/.iterm_agent/config.yaml`
 
 ```yaml
 llm:
@@ -130,130 +132,130 @@ guardrail:
   timeout: 30
 ```
 
-| 字段 | 说明 |
-|------|------|
-| `llm.base_url` | 任意 OpenAI 兼容 endpoint |
-| `llm.model` | 模型名 |
-| `llm.api_key` | 支持 `${ENV_VAR}` 环境变量引用 |
-| `agent.max_react_steps` | 单轮最大工具调用次数（默认 20） |
-| `guardrail.enabled` | 安全护栏开关 |
-| `guardrail.timeout` | 命令超时秒数 |
+| Field | Description |
+|-------|-------------|
+| `llm.base_url` | Any OpenAI-compatible endpoint |
+| `llm.model` | Model name |
+| `llm.api_key` | Supports `${ENV_VAR}` references |
+| `agent.max_react_steps` | Max tool calls per turn (default 20) |
+| `guardrail.enabled` | Security guardrail toggle |
+| `guardrail.timeout` | Command timeout in seconds |
 
-## 使用
+## Usage
 
 ```bash
-# 自然语言 → Agent 处理
+# Natural language → Agent handles it
 帮我安装 Python
 看看 nginx 日志今天有没有 500
 把桌面上的 report.csv 里销售额大于 10 万的行筛出来
 
-# 远程操作
+# Remote operations
 帮我关闭 192.168.50.223 上的模型服务
 SSH 到台式机看看磁盘还剩多少
 
-# 记忆
+# Memory
 192.168.50.223 就是我的台式机，请记住
 
-# ai 前缀 → 强制走 Agent
+# Force agent mode with 'ai' prefix
 ai what is docker
 
-# 普通命令 → 不拦截
+# Normal commands → not intercepted
 ls -la
 git status
 docker ps
 ```
 
-### 临时禁用
+### Temporarily Disable
 
 ```bash
 export ITERM_AGENT_ENABLED=0
 ```
 
-## 工作原理
+## How It Works
 
 ```
-用户输入
+User input
     │
     ▼
 ┌──────────────────────────────────────┐
-│  zsh 插件 (iterm-agent.zsh)          │
-│  结构信号检测 → 路由判断              │
+│  zsh plugin (iterm-agent.zsh)        │
+│  Structural signal detection → route │
 └────────────┬─────────────────────────┘
              │
      ┌───────┴────────┐
      ▼                ▼
-  shell 命令      自然语言
-  (直接执行)      (调用 Agent)
+  Shell command    Natural language
+  (run directly)   (invoke Agent)
                      │
                      ▼
               ┌─────────────┐
-              │  Executor    │  ← ReAct 循环（最多 20 步）
-              │  (LLM + 工具)│
+              │  Executor    │  ← ReAct loop (max 20 steps)
+              │  (LLM+Tools) │
               └──────┬──────┘
                      │
               ┌──────┴──────┐
               ▼             ▼
          run_command    remember
-         (安全护栏)     (长期记忆)
+         (guardrails)   (long-term memory)
 ```
 
-### 路由规则
+### Routing Rules
 
-| 条件 | 路由 |
-|------|------|
-| 含 shell 语法（`\|` `>` `<` `&&` `\|\|` `;`） | Shell |
-| 首词不是已知命令 | Agent |
-| 首词是命令，参数纯 ASCII | Shell |
-| 首词是命令，参数含非 ASCII + 有结构信号 | Shell |
-| 首词是命令，参数含非 ASCII + 无结构信号 | Agent |
-| `ai` 前缀 | Agent（强制） |
+| Condition | Route |
+|-----------|-------|
+| Contains shell syntax (`\|` `>` `<` `&&` `\|\|` `;`) | Shell |
+| First word is not a known command | Agent |
+| First word is a command, args are pure ASCII | Shell |
+| First word is a command, args have non-ASCII + structural signals | Shell |
+| First word is a command, args have non-ASCII + no structural signals | Agent |
+| `ai` prefix | Agent (forced) |
 
-结构信号：`-`、`--`、`@`、`/`、`\`、`~`、`=`、`:`、引号、文件扩展名。跨语言通用，不需要枚举自然语言。
+Structural signals: `-`, `--`, `@`, `/`, `\`, `~`, `=`, `:`, quotes, file extensions. Language-agnostic by design.
 
-## 项目结构
+## Project Structure
 
 ```
 iterm-agent/
-├── iterm-agent.zsh            # zsh 插件（入口 + 路由）
-├── install.sh                 # 一键安装脚本
+├── iterm-agent.zsh            # zsh plugin (entry + routing)
+├── install.sh                 # One-line installer
 ├── pyproject.toml
 └── iterm_agent/
-    ├── quick.py               # CLI 入口（被 zsh 插件调用）
-    ├── entry.py               # Agent 构建工厂
-    ├── config.py              # 配置加载
-    ├── session.py             # 会话持久化（文件锁）
+    ├── quick.py               # CLI entry (called by zsh plugin)
+    ├── entry.py               # Agent factory
+    ├── config.py              # Config loading
+    ├── session.py             # Session persistence (file locks)
     ├── core/
-    │   ├── orchestrator.py    # 调度器
-    │   ├── executor.py        # ReAct 执行器
-    │   └── context.py         # 上下文构建
+    │   ├── orchestrator.py    # Dispatcher
+    │   ├── executor.py        # ReAct executor
+    │   └── context.py         # Context builder
     ├── llm/
-    │   ├── base.py            # LLM 抽象接口
-    │   ├── openai_provider.py # OpenAI 兼容实现（流式 + 重试）
-    │   └── factory.py         # Provider 工厂
+    │   ├── base.py            # LLM abstract interface
+    │   ├── openai_provider.py # OpenAI-compatible (streaming + retry)
+    │   └── factory.py         # Provider factory
     ├── guardrail/
-    │   ├── engine.py          # 安全护栏（黑名单 + 确认）
-    │   └── intent_guard.py    # 意图校验
+    │   ├── engine.py          # Security guardrails (blacklist + confirm)
+    │   └── intent_guard.py    # Intent verification
     ├── memory/
-    │   ├── long_term.py       # 长期记忆（JSON）
-    │   └── compressor.py      # 上下文压缩
+    │   ├── long_term.py       # Long-term memory (JSON)
+    │   └── compressor.py      # Context compression
     └── tools/
-        ├── registry.py        # 工具注册表
-        ├── run_command.py     # 命令执行（超时 + 编码兼容）
-        └── remember.py        # 记忆写入
+        ├── registry.py        # Tool registry
+        ├── run_command.py     # Command execution (timeout + encoding)
+        └── remember.py        # Memory write
 ```
 
-## 日志
+## Logs
 
-| 文件 | 内容 |
-|------|------|
-| `~/.iterm_agent/agent.log` | 运行日志（路由、LLM 调用、工具执行） |
-| `~/.iterm_agent/audit.log` | 命令审计（每条命令及结果） |
+| File | Content |
+|------|---------|
+| `~/.iterm_agent/agent.log` | Runtime log (routing, LLM calls, tool execution) |
+| `~/.iterm_agent/audit.log` | Command audit (every command + result) |
 
-## 开发
+## Development
 
 ```bash
 cd iterm-agent
-PYTHONPATH=. python3 -m iterm_agent.quick "测试一下"
+PYTHONPATH=. python3 -m iterm_agent.quick "test"
 ```
 
 ## License
