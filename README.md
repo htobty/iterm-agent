@@ -1,5 +1,9 @@
 # iTerm Agent
 
+<p align="center">
+  <img src="docs/promo.svg" alt="iTerm Agent" width="800"/>
+</p>
+
 **A lightweight agent that turns iTerm2 into your intelligent assistant in seconds.**
 
 [中文](README.zh.md) | English

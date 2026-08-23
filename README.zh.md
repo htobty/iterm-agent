@@ -1,19 +1,14 @@
----
-name: iterm_agent_readme_zh
-title: iTerm Agent
-description: 跟终端说人话，它自己把活干完。
-summary: 跟终端说人话，它自己把活干完。
-keywords: []
-category: Users/htob/code/iterm-agent
----
-
 # iTerm Agent
 
-**一个让你的 iTerm2 变成智能助手的轻量级 Agent。**
+<p align="center">
+  <img src="docs/promo_zh.svg" alt="iTerm Agent" width="800"/>
+</p>
+
+**一个让iTerm2 秒变智能助手的轻量级 Agent。**
 
 中文 | [English](README.md)
 
-在 iTerm2 里输入自然语言，Agent 自己规划、自己执行、自己验证。普通命令不受影响，装完就忘。
+在 iTerm2 里输入自然语言，Agent 自己规划、自己执行、自己验证。普通命令不受影响。
 
 ```
 ➜  ~ 帮我看看当前目录有哪些 Python 项目
@@ -22,14 +17,14 @@ category: Users/htob/code/iterm-agent
   2. data-pipeline/ — ETL 脚本
   3. web-scraper/ — 爬虫工具
 
-➜  ~ 帮我启动 192.168.50.223 上的模型服务
-[执行] ssh htob@192.168.50.223 "start llama-server.exe --port 8989 ..."
-[执行] ssh htob@192.168.50.223 "curl -s http://localhost:8989/health"
+➜  ~ 帮我启动本地模型
+[执行]start llama-server.exe --port 8000 ..."
+[执行] curl -s http://localhost:8000/health"
 模型服务已启动，健康检查通过。
 
 ➜  ~ ls -la          ← 正常命令，不拦截
 total 48
-drwxr-xr-x  12 htob  staff  384 Aug 21 10:00 .
+drwxr-xr-x  12 admin  staff  384 Aug 21 10:00 .
 ```
 
 ## 它解决什么问题
@@ -43,10 +38,8 @@ iterm-agent 让你用一句话完成这些。它不是补全，不是翻译，�
 | | Codex / Claude Code | iterm-agent |
 |---|---|---|
 | 定位 | 软件工程（写代码、重构） | 终端操作（运维、远程管理、日常杂活） |
-| 模型 | 绑定厂商 | 任意 OpenAI 兼容接口，含本地模型 |
-| 成本 | 按 token 付费 | 本地模型零成本 |
-| 隐私 | 上下文发到云端 | 可以完全不出机器 |
-| 环境 | 沙箱 / 项目目录 | 你的真实 shell，能 SSH 到任何机器 |
+| 隐私 | 上下文发到云端 | 可使用本地模型，完全不出机器 |
+| 环境 | 沙箱 / 项目目录 | 你的真实 shell |
 | 侵入性 | 独立工具 | 嵌在现有终端，不用时透明 |
 
 写代码用 Claude Code，干活用 iterm-agent。互补，不冲突。
@@ -55,9 +48,7 @@ iterm-agent 让你用一句话完成这些。它不是补全，不是翻译，�
 
 ### 智能路由，不劫持你的终端
 
-输入 `git status` 就是 `git status`，输入 `ssh htob@192.168.50.223 "H:\\下载\\llama-server.exe"` 也正常执行——即使参数里有中文路径。
-
-路由逻辑基于**结构信号**（`-`、`@`、`/`、`~`、`=`、`:`、引号、文件扩展名），不依赖语言枚举。中文、日文、韩文、任何语言的自然语言都能正确识别。
+路由逻辑基于**结构信号**（`-`、`@`、`/`、`~`、`=`、`:`、引号、文件扩展名），任何语言的自然语言都能正确识别。
 
 ### 模型随便换
 
@@ -72,11 +63,11 @@ llm:
 
 ### 长期记忆
 
-告诉它一次"我的台式机 IP 是 192.168.50.223，用户名 htob"，它存到本地 JSON。以后所有远程操作自动带上，不用每次重复。
+告诉它一次"我的台式机 IP 是 192.168.0.113，用户名 name"，它存到本地记忆库。以后所有远程操作自动带上，不用每次重复。
 
 ### 真正的 Agent
 
-ReAct 循环，最多 20 步。它会：
+轻量级的ReAct 循环。它会：
 - 先 `ls` 看目录结构
 - 再 `cd` 进去
 - 执行操作
@@ -150,11 +141,11 @@ guardrail:
 把桌面上的 report.csv 里销售额大于 10 万的行筛出来
 
 # 远程操作
-帮我关闭 192.168.50.223 上的模型服务
+帮我关闭台式机  上的模型服务
 SSH 到台式机看看磁盘还剩多少
 
 # 记忆
-192.168.50.223 就是我的台式机，请记住
+192.168.0.133 就是我的台式机，请记住
 
 # ai 前缀 → 强制走 Agent
 ai what is docker
@@ -189,7 +180,7 @@ export ITERM_AGENT_ENABLED=0
                      │
                      ▼
               ┌─────────────┐
-              │  Executor    │  ← ReAct 循环（最多 20 步）
+              │  Executor    │  ← ReAct 循环
               │  (LLM + 工具)│
               └──────┬──────┘
                      │
@@ -198,19 +189,6 @@ export ITERM_AGENT_ENABLED=0
          run_command    remember
          (安全护栏)     (长期记忆)
 ```
-
-### 路由规则
-
-| 条件 | 路由 |
-|------|------|
-| 含 shell 语法（`\|` `>` `<` `&&` `\|\|` `;`） | Shell |
-| 首词不是已知命令 | Agent |
-| 首词是命令，参数纯 ASCII | Shell |
-| 首词是命令，参数含非 ASCII + 有结构信号 | Shell |
-| 首词是命令，参数含非 ASCII + 无结构信号 | Agent |
-| `ai` 前缀 | Agent（强制） |
-
-结构信号：`-`、`--`、`@`、`/`、`\`、`~`、`=`、`:`、引号、文件扩展名。跨语言通用，不需要枚举自然语言。
 
 ## 项目结构
 

@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0e1a"/>
+      <stop offset="100%" stop-color="#1a1f35"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4aa"/>
+      <stop offset="100%" stop-color="#00b4d8"/>
+    </linearGradient>
+    <linearGradient id="terminal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e2235"/>
+      <stop offset="100%" stop-color="#141828"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.04">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#fff" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="200" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="400" y1="0" x2="400" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="800" y1="0" x2="800" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="1000" y1="0" x2="1000" y2="630" stroke="#fff" stroke-width="0.5"/>
+  </g>
+
+  <!-- Left side: Title and tagline -->
+  <g transform="translate(60, 80)">
+    <!-- Logo mark -->
+    <rect x="0" y="0" width="48" height="48" rx="10" fill="url(#accent)" opacity="0.9"/>
+    <text x="24" y="33" font-family="monospace" font-size="22" font-weight="bold" fill="#0a0e1a" text-anchor="middle">$_</text>
+
+    <!-- Project name -->
+    <text x="62" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="32" font-weight="700" fill="#ffffff">iTerm Agent</text>
+
+    <!-- Tagline -->
+    <text x="0" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" fill="#8892b0">A lightweight agent that turns iTerm2 into your intelligent assistant.</text>
+
+    <!-- Feature badges -->
+    <g transform="translate(0, 110)">
+      <rect x="0" y="0" width="108" height="28" rx="14" fill="none" stroke="#00d4aa" stroke-width="1" opacity="0.6"/>
+      <text x="54" y="18" font-family="-apple-system, sans-serif" font-size="11" fill="#00d4aa" text-anchor="middle">Any LLM</text>
+
+      <rect x="118" y="0" width="120" height="28" rx="14" fill="none" stroke="#00d4aa" stroke-width="1" opacity="0.6"/>
+      <text x="178" y="18" font-family="-apple-system, sans-serif" font-size="11" fill="#00d4aa" text-anchor="middle">Local Model</text>
+
+      <rect x="248" y="0" width="130" height="28" rx="14" fill="none" stroke="#00d4aa" stroke-width="1" opacity="0.6"/>
+      <text x="313" y="18" font-family="-apple-system, sans-serif" font-size="11" fill="#00d4aa" text-anchor="middle">Zero Lock-in</text>
+    </g>
+
+    <!-- Key features list -->
+    <g transform="translate(0, 170)" font-family="-apple-system, sans-serif" font-size="13" fill="#a0aec0">
+      <circle cx="6" cy="5" r="3" fill="#00d4aa"/>
+      <text x="20" y="9">Natural language → multi-step execution</text>
+
+      <circle cx="6" cy="35" r="3" fill="#00d4aa"/>
+      <text x="20" y="39">Smart routing: never hijacks your shell</text>
+
+      <circle cx="6" cy="65" r="3" fill="#00d4aa"/>
+      <text x="20" y="69">Long-term memory across sessions</text>
+
+      <circle cx="6" cy="95" r="3" fill="#00d4aa"/>
+      <text x="20" y="99">Security guardrails + audit log</text>
+    </g>
+
+    <!-- GitHub link -->
+    <g transform="translate(0, 310)">
+      <rect x="0" y="0" width="220" height="36" rx="6" fill="#ffffff" opacity="0.06" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.15"/>
+      <text x="110" y="23" font-family="monospace" font-size="12" fill="#e2e8f0" text-anchor="middle">github.com/htobty/iterm-agent</text>
+    </g>
+  </g>
+
+  <!-- Right side: Terminal mockup -->
+  <g transform="translate(520, 60)" filter="url(#shadow)">
+    <!-- Terminal window -->
+    <rect x="0" y="0" width="620" height="510" rx="12" fill="url(#terminal)" stroke="#2d3348" stroke-width="1"/>
+
+    <!-- Title bar -->
+    <rect x="0" y="0" width="620" height="36" rx="12" fill="#1a1f30"/>
+    <rect x="0" y="24" width="620" height="12" fill="#1a1f30"/>
+    <!-- Traffic lights -->
+    <circle cx="24" cy="18" r="6" fill="#ff5f57"/>
+    <circle cx="44" cy="18" r="6" fill="#febc2e"/>
+    <circle cx="64" cy="18" r="6" fill="#28c840"/>
+    <!-- Title -->
+    <text x="310" y="23" font-family="-apple-system, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">htob@mac ~</text>
+
+    <!-- Terminal content -->
+    <g transform="translate(20, 56)" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', monospace" font-size="13">
+
+      <!-- Line 1: User input (natural language) -->
+      <text x="0" y="0" fill="#00d4aa">➜</text>
+      <text x="22" y="0" fill="#63b3ed"> ~</text>
+      <text x="42" y="0" fill="#e2e8f0">帮我启动本地模型</text>
+
+      <!-- Line 2: Agent thinking indicator -->
+      <text x="0" y="28" fill="#4a5568">  ⠋</text>
+      <text x="22" y="28" fill="#4a5568"> planning...</text>
+
+      <!-- Line 3: Execution step 1 -->
+      <text x="0" y="60" fill="#00d4aa">  ✓</text>
+      <text x="22" y="60" fill="#a0aec0">ssh htob@192.168.50.223 "start llama-server.exe --port 8989 ..."</text>
+
+      <!-- Line 4: Execution step 2 -->
+      <text x="0" y="88" fill="#00d4aa">  ✓</text>
+      <text x="22" y="88" fill="#a0aec0">ssh htob@192.168.50.223 "curl -s http://localhost:8989/health"</text>
+
+      <!-- Line 5: Result -->
+      <text x="0" y="120" fill="#00d4aa">  ✓</text>
+      <text x="22" y="120" fill="#e2e8f0">模型服务已启动，健康检查通过。</text>
+
+      <!-- Separator -->
+      <line x1="0" y1="145" x2="580" y2="145" stroke="#2d3348" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+      <!-- Line 6: Normal command -->
+      <text x="0" y="175" fill="#00d4aa">➜</text>
+      <text x="22" y="175" fill="#63b3ed"> ~</text>
+      <text x="42" y="175" fill="#e2e8f0">ls -la</text>
+
+      <!-- Line 7: Normal output -->
+      <text x="0" y="203" fill="#718096">total 48</text>
+      <text x="0" y="223" fill="#718096">drwxr-xr-x  12 htob  staff  384 Aug 21 10:00 .</text>
+      <text x="0" y="243" fill="#718096">drwxr-xr-x   5 htob  staff  160 Aug 21 10:00 ..</text>
+      <text x="0" y="263" fill="#718096">drwxr-xr-x  11 htob  staff  352 Aug 21 09:58 iterm-agent</text>
+
+      <!-- Separator -->
+      <line x1="0" y1="288" x2="580" y2="288" stroke="#2d3348" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+      <!-- Line 8: Memory example -->
+      <text x="0" y="318" fill="#00d4aa">➜</text>
+      <text x="22" y="318" fill="#63b3ed"> ~</text>
+      <text x="42" y="318" fill="#e2e8f0">192.168.50.223 就是我的台式机，请记住</text>
+
+      <!-- Line 9: Memory saved -->
+      <text x="0" y="346" fill="#00d4aa">  ✓</text>
+      <text x="22" y="346" fill="#a0aec0">已记住：台式机 IP 192.168.50.223，用户名 htob</text>
+
+      <!-- Separator -->
+      <line x1="0" y1="371" x2="580" y2="371" stroke="#2d3348" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+      <!-- Line 10: Remote operation using memory -->
+      <text x="0" y="401" fill="#00d4aa">➜</text>
+      <text x="22" y="401" fill="#63b3ed"> ~</text>
+      <text x="42" y="401" fill="#e2e8f0">看看台式机磁盘还剩多少</text>
+
+      <!-- Line 11: Agent uses memory -->
+      <text x="0" y="429" fill="#00d4aa">  ✓</text>
+      <text x="22" y="429" fill="#a0aec0">ssh htob@192.168.50.223 "df -h /"</text>
+
+      <!-- Line 12: Result -->
+      <text x="0" y="457" fill="#00d4aa">  ✓</text>
+      <text x="22" y="457" fill="#e2e8f0">C: 剩余 234GB / 共 512GB（46% 已用）</text>
+    </g>
+  </g>
+
+  <!-- Bottom: Tech stack icons (text-based) -->
+  <g transform="translate(60, 560)" font-family="-apple-system, sans-serif" font-size="11" fill="#4a5568">
+    <text x="0" y="0">macOS</text>
+    <text x="55" y="0">·</text>
+    <text x="65" y="0">iTerm2</text>
+    <text x="120" y="0">·</text>
+    <text x="130" y="0">Python 3.9+</text>
+    <text x="215" y="0">·</text>
+    <text x="225" y="0">MIT License</text>
+    <text x="310" y="0">·</text>
+    <text x="320" y="0">~800 lines</text>
+  </g>
+
+  <!-- Decorative: small accent line at bottom -->
+  <rect x="60" y="590" width="1080" height="2" rx="1" fill="url(#accent)" opacity="0.3"/>
+</svg>
