@@ -9,7 +9,7 @@ category: Users/htob/code/iterm-agent
 
 # iTerm Agent
 
-**Talk to your terminal. It gets things done.**
+**A lightweight agent that turns iTerm2 into your intelligent assistant.**
 
 [中文](README.zh.md) | English
 

@@ -9,7 +9,7 @@ category: Users/htob/code/iterm-agent
 
 # iTerm Agent
 
-**跟终端说人话，它自己把活干完。**
+**一个让你的 iTerm2 变成智能助手的轻量级 Agent。**
 
 中文 | [English](README.md)
 
