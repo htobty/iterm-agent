@@ -55,7 +55,8 @@ def create_provider(config: dict[str, Any]) -> LLMProvider:
     """根据配置字典创建 LLM Provider 实例。
 
     当前支持：
-    - openai: OpenAI 兼容接口（OpenAI / Moonshot / DeepSeek / vLLM / 任意兼容接口）
+    - openai（默认）: OpenAI 兼容接口（OpenAI / Moonshot / DeepSeek / vLLM / 任意兼容接口）
+    - anthropic: Anthropic Claude 原生接口
     """
     provider_name = config.get("provider", "openai").lower()
     model = config.get("model", "gpt-4o")
@@ -67,16 +68,19 @@ def create_provider(config: dict[str, Any]) -> LLMProvider:
     if forced_temp is not None:
         logger.info(f"模型 {model} 要求 temperature={forced_temp}，已自动覆盖")
 
-    if provider_name == "openai":
-        from iterm_agent.llm.openai_provider import OpenAIProvider
-        return OpenAIProvider(
+    if provider_name == "anthropic":
+        from iterm_agent.llm.anthropic_provider import AnthropicProvider
+        return AnthropicProvider(
             model=model,
             api_key=api_key,
-            base_url=base_url,
             forced_temperature=forced_temp,
         )
 
-    else:
-        raise ValueError(
-            f"未知的 LLM provider: {provider_name}，当前支持: openai（OpenAI 兼容接口）"
-        )
+    # 默认走 OpenAI 兼容接口
+    from iterm_agent.llm.openai_provider import OpenAIProvider
+    return OpenAIProvider(
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        forced_temperature=forced_temp,
+    )
