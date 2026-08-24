@@ -4,6 +4,13 @@
   <img src="docs/promo.svg" alt="iTerm Agent" width="800"/>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License"/>
+  <img src="https://img.shields.io/badge/Python-3.9%2B-blue.svg" alt="Python 3.9+"/>
+  <img src="https://img.shields.io/badge/Platform-macOS-lightgrey.svg" alt="macOS"/>
+  <img src="https://img.shields.io/badge/Terminal-iTerm2-orange.svg" alt="iTerm2"/>
+</p>
+
 **A lightweight agent that turns iTerm2 into your intelligent assistant in seconds.**
 
 [中文](README.zh.md) | English
