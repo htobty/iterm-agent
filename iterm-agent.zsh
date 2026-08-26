@@ -41,6 +41,50 @@ _iterm_agent_has_structural_signals() {
     return 1
 }
 
+# 判断输入是否包含中文自然语言特征（问句/陈述句）
+# 即使首词碰巧是命令名，只要整体是中文问句也应判 Agent
+_iterm_agent_is_chinese_nl() {
+    local input="$1"
+
+    # 用 $'\uXXXX' 构造真实 CJK 范围（zsh glob 中 \uXXXX 不生效）
+    local cjk_lo=$'\u4e00'
+    local cjk_hi=$'\u9fff'
+
+    # 必须包含至少一个 CJK 字符，否则不是中文
+    if [[ "$input" != *[$cjk_lo-$cjk_hi]* ]]; then
+        return 1
+    fi
+
+    # 中文问句/陈述句特征词
+    local nl_markers=(
+        "吗" "啊" "呢" "吧" "呀" "嘛" "哦" "哈"
+        "怎么" "什么" "多少" "如何" "为什么" "哪" "谁"
+        "能不能" "可以" "是否" "有没有" "是不是"
+        "帮我" "请" "给我" "告诉我"
+        "？" "?"
+    )
+    local marker
+    for marker in "${nl_markers[@]}"; do
+        [[ "$input" == *"$marker"* ]] && return 0
+    done
+
+    # 中文字符占比 > 30% → 大概率是自然语言
+    local total_len=${#input}
+    local chinese_len=0
+    local i ch
+    for (( i=1; i<=total_len; i++ )); do
+        ch="${input[$i]}"
+        if [[ "$ch" == [$cjk_lo-$cjk_hi] ]]; then
+            (( chinese_len++ ))
+        fi
+    done
+    if (( total_len > 0 && chinese_len * 100 / total_len > 30 )); then
+        return 0
+    fi
+
+    return 1
+}
+
 # 判断输入是否应该走 Agent
 _iterm_agent_should_intercept() {
     local input="$1"
@@ -58,13 +102,25 @@ _iterm_agent_should_intercept() {
     fi
 
     local first_word="${input%% *}"
-    first_word="${first_word##*/}"
 
     [[ -z "$first_word" ]] && return 1
+
+    # ===== 路径检测：首词含路径分隔符或相对路径前缀 → 一定是命令 =====
+    # 覆盖 ~/xxx/bin/python、./run.sh、/usr/bin/xxx、../foo 等
+    if [[ "$first_word" == *"/"* || "$first_word" == "~"* || "$first_word" == "."* ]]; then
+        return 1
+    fi
+
     # 纯 ASCII 且以数字开头 → 可能是版本号/端口号等，不拦截
     # 含非 ASCII 则跳过此规则（如 "192.168.50.223就是我的台式机"）
     if [[ "$input" != *[^[:ascii:]]* && "$first_word" == [0-9]* ]]; then
         return 1
+    fi
+
+    # ===== 中文自然语言优先检测 =====
+    # 即使首词碰巧是命令名（如 Prompt），只要整体是中文问句 → Agent
+    if _iterm_agent_is_chinese_nl "$input"; then
+        return 0
     fi
 
     # 判断首词是否是已知命令

@@ -1,12 +1,3 @@
----
-name: contributing_to_iterm_agent_contributing
-title: Contributing to iTerm-Agent
-description: Thanks for your interest!
-summary: Thanks for your interest!
-keywords: []
-category: Users/htob/code/iterm-agent
----
-
 # Contributing to iTerm-Agent
 
 Thanks for your interest! Here's how to get started.

@@ -66,12 +66,35 @@ class InputRouter:
     # 中文检测正则
     CHINESE_RE = re.compile(r'[\u4e00-\u9fff]')
 
+    # 中文自然语言特征词（问句/陈述句）
+    NL_MARKERS = (
+        "吗", "啊", "呢", "吧", "呀", "嘛", "哦", "哈",
+        "怎么", "什么", "多少", "如何", "为什么", "哪", "谁",
+        "能不能", "可以", "是否", "有没有", "是不是",
+        "帮我", "请", "给我", "告诉我",
+        "？", "?",
+    )
+
     # 自然语言常见开头（增强判断）
     NL_HINTS = (
         "帮我", "请", "怎么", "如何", "能不能", "可以", "给我",
         "写一个", "写个", "创建", "安装", "配置", "检查", "查看",
         "把", "将", "运行", "执行", "删除", "修改", "添加",
     )
+
+    def _is_chinese_nl(self, text: str) -> bool:
+        """判断输入是否为中文自然语言（问句/陈述句）。"""
+        if not self.CHINESE_RE.search(text):
+            return False
+        # 特征词匹配
+        for marker in self.NL_MARKERS:
+            if marker in text:
+                return True
+        # 中文字符占比 > 30%
+        chinese_count = len(self.CHINESE_RE.findall(text))
+        if len(text) > 0 and chinese_count / len(text) > 0.3:
+            return True
+        return False
 
     def route(self, text: str) -> RouteResult:
         """路由用户输入。
@@ -96,28 +119,33 @@ class InputRouter:
                     cleaned_input=cleaned,
                 )
 
-        # 2. 检查首词是否在命令白名单中
-        first_word = stripped.split()[0].lower()
-        # 去掉路径前缀（如 /usr/bin/python3 → python3）
-        if "/" in first_word:
-            first_word = first_word.rsplit("/", 1)[-1]
+        first_word = stripped.split()[0]
 
-        if first_word in self.COMMAND_WHITELIST:
+        # 2. 路径检测：首词含路径分隔符或相对路径前缀 → 一定是命令
+        if "/" in first_word or first_word.startswith("~") or first_word.startswith("."):
+            return RouteResult(
+                target="shell",
+                reason=f"路径命令 '{first_word}'",
+                cleaned_input=stripped,
+            )
+
+        # 3. 中文自然语言优先检测（即使首词碰巧是命令名）
+        if self._is_chinese_nl(stripped):
+            return RouteResult(
+                target="agent",
+                reason="中文自然语言",
+                cleaned_input=stripped,
+            )
+
+        # 4. 检查首词是否在命令白名单中
+        if first_word.lower() in self.COMMAND_WHITELIST:
             return RouteResult(
                 target="shell",
                 reason=f"已知命令 '{first_word}'",
                 cleaned_input=stripped,
             )
 
-        # 3. 包含中文 → 大概率是自然语言
-        if self.CHINESE_RE.search(stripped):
-            return RouteResult(
-                target="agent",
-                reason="包含中文",
-                cleaned_input=stripped,
-            )
-
-        # 4. 匹配自然语言提示词
+        # 5. 匹配自然语言提示词
         for hint in self.NL_HINTS:
             if stripped.startswith(hint):
                 return RouteResult(
@@ -126,7 +154,7 @@ class InputRouter:
                     cleaned_input=stripped,
                 )
 
-        # 5. 默认：当作 shell 命令
+        # 6. 默认：当作 shell 命令
         return RouteResult(
             target="shell",
             reason="默认 shell",
